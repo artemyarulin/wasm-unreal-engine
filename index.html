@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+      canvas {
+        background-color: #fff;
+        border: 1px solid #000;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" width="800" height="600"></canvas>
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const start = Date.now();
+      const ball = {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        radius: 20,
+        dy: 2,
+        mass: 1,
+        gravity: 1,
+      };
+      const status = {
+        frame: 0,
+        version: "1.0",
+        runtime: 0,
+      };
+      function drawBall() {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "#0095DD";
+        ctx.fill();
+        ctx.closePath();
+      }
+      function drawStatus() {
+        status.frame = status.frame == 60 ? 0 : status.frame++;
+        const frame = (status.frame++).toString().padStart(2, "0");
+        const runtime = Math.floor((Date.now() - start) / 1000);
+        ctx.fillStyle = "#000000";
+        ctx.font = "48px serif";
+        ctx.fillText(`WASM Logic Version: ${status.version}`, 49, 50);
+        ctx.fillText(`Gravity: ${ball.gravity}`, 329, 100);
+        ctx.fillText(`Runtime: ${runtime}s`, 310, 150);
+        ctx.fillText(`    Frame: ${frame}`, 305, 200);
+      }
+      function updateBallPosition() {
+        ball.dy += ball.gravity * ball.mass;
+        ball.y += ball.dy;
+        if (ball.y + ball.radius > canvas.height) {
+          ball.y = canvas.height - ball.radius;
+          ball.dy = -ball.dy;
+        }
+      }
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawStatus();
+        drawBall();
+        updateBallPosition();
+        requestAnimationFrame(draw);
+      }
+      draw();
+    </script>
+  </body>
+</html>
