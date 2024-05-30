@@ -1,7 +1,7 @@
 {
   "name": "client-web",
   "scripts": {
-    "build": "wasm-pack build ../core --out-dir $PWD/core --out-name core --target web --release",
+    "build": "wasm-pack build ../core --out-dir $PWD/core --out-name core --target web --release && sed -i '' '/if (wasm !== undefined) return wasm;/d' core/core.js",
     "serve": "python3 -m http.server"
   },
   "devDependencies": {

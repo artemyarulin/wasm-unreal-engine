@@ -20,25 +20,26 @@
     <canvas id="canvas" width="800" height="600"></canvas>
     <script type="module">
       import init, { Logic } from "./core/core.js";
+
+      let logic = null;
+
       (async function () {
         function drawBall() {
           ctx.beginPath();
-          ctx.arc(logic.ball_x, logic.ball_y, logic.radius, 0, Math.PI * 2);
+          ctx.arc(logic.ball_x, logic.ball_y(), logic.radius, 0, Math.PI * 2);
           ctx.fillStyle = "#0095DD";
           ctx.fill();
           ctx.closePath();
         }
 
         function drawStatus() {
-          status.frame = status.frame == 60 ? 0 : status.frame++;
-          const frame = (status.frame++).toString().padStart(2, "0");
           const runtime = Math.floor((Date.now() - start) / 1000);
           ctx.fillStyle = "#000000";
           ctx.font = "48px serif";
           ctx.fillText(`WASM Logic Version: ${logic.version()}`, 49, 50);
           ctx.fillText(`Gravity: ${logic.gravity}`, 329, 100);
           ctx.fillText(`Runtime: ${runtime}s`, 310, 150);
-          ctx.fillText(`    Frame: ${frame}`, 305, 200);
+          ctx.fillText(`    Frame: ${logic.frame()}`, 305, 200);
         }
 
         function gameLoop() {
@@ -55,7 +56,8 @@
             console.log("onopen", event);
           };
           ws.onmessage = function (event) {
-            console.log("onmessage", event);
+            console.log("onmessage");
+            loadWasm();
           };
           ws.onclose = function (event) {
             console.log("onclose", event);
@@ -66,13 +68,14 @@
           };
         }
 
-        await init();
+        async function loadWasm() {
+          await init();
+          logic = Logic.new(canvas.width, canvas.height);
+        }
+
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
-        const logic = Logic.new(canvas.width, canvas.height);
-        const status = {
-          frame: 0,
-        };
+        await loadWasm();
         const start = Date.now();
         startWSClient();
 
