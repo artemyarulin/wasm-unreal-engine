@@ -20,15 +20,7 @@
     <canvas id="canvas" width="800" height="600"></canvas>
     <script type="module">
       import init, { Logic } from "./core/core.js";
-      async function run() {
-        await init();
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-        const logic = Logic.new(canvas.width, canvas.height);
-        const status = {
-          frame: 0,
-        };
-        const start = Date.now();
+      (async function () {
         function drawBall() {
           ctx.beginPath();
           ctx.arc(logic.ball_x, logic.ball_y, logic.radius, 0, Math.PI * 2);
@@ -36,6 +28,7 @@
           ctx.fill();
           ctx.closePath();
         }
+
         function drawStatus() {
           status.frame = status.frame == 60 ? 0 : status.frame++;
           const frame = (status.frame++).toString().padStart(2, "0");
@@ -47,16 +40,44 @@
           ctx.fillText(`Runtime: ${runtime}s`, 310, 150);
           ctx.fillText(`    Frame: ${frame}`, 305, 200);
         }
-        function loop() {
+
+        function gameLoop() {
           logic.tick();
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           drawStatus();
           drawBall();
-          requestAnimationFrame(loop);
+          requestAnimationFrame(gameLoop);
         }
-        loop();
-      }
-      run();
+
+        function startWSClient() {
+          const ws = new WebSocket("ws://localhost:8080/ws");
+          ws.onopen = function (event) {
+            console.log("onopen", event);
+          };
+          ws.onmessage = function (event) {
+            console.log("onmessage", event);
+          };
+          ws.onclose = function (event) {
+            console.log("onclose", event);
+            setTimeout(startWSClient, 2000);
+          };
+          ws.onerror = function (event) {
+            console.log("onerror", event);
+          };
+        }
+
+        await init();
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const logic = Logic.new(canvas.width, canvas.height);
+        const status = {
+          frame: 0,
+        };
+        const start = Date.now();
+        startWSClient();
+
+        gameLoop();
+      })();
     </script>
   </body>
 </html>
